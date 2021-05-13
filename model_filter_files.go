@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
 	"io"
@@ -11,10 +12,18 @@ import (
 	"strings"
 )
 
+type MockInfo struct {
+	targetPath    string
+	sourceRepo    string
+	targetPackage string
+	interfaces    []string
+}
+
 // FilesOps Methods are nulifying state files on error.
 type FilesOps struct {
 	e         error // only one error for simplicity
 	filePaths []string
+	content   []string
 }
 
 func (f *FilesOps) WalkFolder(folder string) *FilesOps {
@@ -327,6 +336,94 @@ func (f *FilesOps) Replace(old, new string) *FilesOps {
 			}
 		}
 	}
+
+	return f
+}
+
+// Append Method would append text to state files.
+func (f *FilesOps) Append(text string) *FilesOps {
+	if f.e != nil {
+		return nil
+	}
+
+	if len(f.filePaths) == 0 {
+		return &FilesOps{
+			e: errors.New("no files to consider for append"),
+		}
+	}
+
+	for _, file := range f.filePaths {
+		content, errRead := os.ReadFile(file)
+		if errRead != nil {
+			return &FilesOps{
+				e: errRead,
+			}
+		}
+
+		data := string(content) + "\n" + text
+
+		errWrite := ioutil.WriteFile(file, []byte(data), 0644)
+		if errWrite != nil {
+			return &FilesOps{
+				e: errWrite,
+			}
+		}
+	}
+
+	return f
+}
+
+// SelectBy Method would append to state content rows containing passed pattern.
+func (f *FilesOps) SelectBy(pattern string) *FilesOps {
+	if f.e != nil {
+		return nil
+	}
+
+	if len(f.filePaths) == 0 {
+		return &FilesOps{
+			e: errors.New("no files to consider for selection"),
+		}
+	}
+
+	for _, file := range f.filePaths {
+		fileHandler, errOpen := os.Open(file)
+		if errOpen != nil {
+			return &FilesOps{
+				e: errOpen,
+			}
+		}
+		defer fileHandler.Close()
+
+		scanner := bufio.NewScanner(fileHandler)
+
+		for scanner.Scan() {
+			lineContent := scanner.Text()
+
+			if strings.Contains(lineContent, pattern) {
+				f.content = append(f.content, lineContent)
+			}
+		}
+	}
+
+	return f
+}
+
+func (f *FilesOps) PrintContent(w io.Writer) *FilesOps {
+	if f.e != nil {
+		return nil
+	}
+
+	if len(f.content) == 0 {
+		return &FilesOps{
+			e: errors.New("no content to print"),
+		}
+	}
+
+	for _, content := range f.content {
+		w.Write([]byte("\n" + content))
+	}
+
+	w.Write([]byte("\n"))
 
 	return f
 }
