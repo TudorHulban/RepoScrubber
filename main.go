@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 )
 
@@ -8,9 +9,11 @@ func main() {
 	folderPath := "/home/tudi/ram/test"
 
 	filter := FilesOps{}
-	// files := filter.ByFolder(folderPath).ByExtension("go").ByContent("package").Rename("bak")
+
+	// filter.ByFolder(folderPath).ByExtension("go").ByContent("package").Rename("bak")
 
 	// filter.ByFolder(folderPath).PrintFileNames(os.Stdout)
 
-	filter.WalkFolder(folderPath).ByExtension("go").PrintFilePath(os.Stdout)
+	f := filter.ByFolder(folderPath).ByExtension("go").ByContent("package").PrintFilePath(os.Stdout)
+	fmt.Println(f.e)
 }

@@ -12,7 +12,6 @@ import (
 // FilesOps Methods are nulifying state on error.
 type FilesOps struct {
 	e         error // TODO: assess maybe better to go with slice
-	files     []fs.DirEntry
 	filePaths []string
 }
 
@@ -45,7 +44,6 @@ func (f *FilesOps) WalkFolder(folder string) *FilesOps {
 		}
 	}
 
-	f.files = res
 	f.filePaths = paths
 
 	return f
@@ -56,11 +54,25 @@ func (f *FilesOps) ByFolder(folder string) *FilesOps {
 		return nil
 	}
 
-	res, errRead := os.ReadDir(folder)
+	files, errRead := os.ReadDir(folder)
+	if errRead != nil {
+		return &FilesOps{
+			e: errRead,
+		}
+	}
+
+	var res []string
+
+	if folder[len(folder)-1:] != "/" {
+		folder = folder + "/"
+	}
+
+	for _, file := range files {
+		res = append(res, folder+file.Name())
+	}
 
 	return &FilesOps{
-		e:     errRead,
-		files: res,
+		filePaths: res,
 	}
 }
 
@@ -69,7 +81,7 @@ func (f *FilesOps) ByExtension(extension string) *FilesOps {
 		return nil
 	}
 
-	if len(f.files) == 0 {
+	if len(f.filePaths) == 0 {
 		return &FilesOps{
 			e: errors.New("no files to search by extension"),
 		}
@@ -78,16 +90,6 @@ func (f *FilesOps) ByExtension(extension string) *FilesOps {
 	if extension[:1] != "." {
 		extension = "." + extension
 	}
-
-	var res []fs.DirEntry
-
-	for _, info := range f.files {
-		if extension == filepath.Ext(info.Name()) {
-			res = append(res, info)
-		}
-	}
-
-	f.files = res
 
 	var paths []string
 
@@ -107,23 +109,23 @@ func (f *FilesOps) ByContent(pattern string) *FilesOps {
 		return nil
 	}
 
-	if len(f.files) == 0 {
+	if len(f.filePaths) == 0 {
 		return &FilesOps{
 			e: errors.New("no files to search by content"),
 		}
 	}
 
-	var res []fs.DirEntry
+	var res []string
 
-	for _, info := range f.files {
-		if errContains := fileContains(pattern, info.Name()); errContains != nil {
+	for _, file := range f.filePaths {
+		if errContains := fileContains(pattern, file); errContains != nil {
 			continue
 		}
 
-		res = append(res, info)
+		res = append(res, file)
 	}
 
-	f.files = res
+	f.filePaths = res
 
 	return f
 }
@@ -133,7 +135,7 @@ func (f *FilesOps) Rename(withExtension string) *FilesOps {
 		return nil
 	}
 
-	if len(f.files) == 0 {
+	if len(f.filePaths) == 0 {
 		return &FilesOps{
 			e: errors.New("no files to move"),
 		}
@@ -143,10 +145,10 @@ func (f *FilesOps) Rename(withExtension string) *FilesOps {
 		withExtension = "." + withExtension
 	}
 
-	for _, info := range f.files {
-		if errMove := os.Rename(info.Name(), info.Name()+withExtension); errMove != nil {
+	for _, file := range f.filePaths {
+		if errMove := os.Rename(file, file+withExtension); errMove != nil {
 			return &FilesOps{
-				e: fmt.Errorf("error when renaming %s", info.Name()),
+				e: fmt.Errorf("error when renaming %s", file),
 			}
 		}
 	}
@@ -160,7 +162,7 @@ func (f *FilesOps) Copy(withExtension string) *FilesOps {
 		return nil
 	}
 
-	if len(f.files) == 0 {
+	if len(f.filePaths) == 0 {
 		return &FilesOps{
 			e: errors.New("no files to copy"),
 		}
@@ -170,10 +172,10 @@ func (f *FilesOps) Copy(withExtension string) *FilesOps {
 		withExtension = "." + withExtension
 	}
 
-	for _, info := range f.files {
-		if _, errCopy := fileCopy(info.Name(), info.Name()+withExtension); errCopy != nil {
+	for _, file := range f.filePaths {
+		if _, errCopy := fileCopy(file, file+withExtension); errCopy != nil {
 			return &FilesOps{
-				e: fmt.Errorf("error when copying %s", info.Name()),
+				e: fmt.Errorf("error when copying %s", file),
 			}
 		}
 	}
@@ -186,14 +188,14 @@ func (f *FilesOps) PrintFileName(w io.Writer) *FilesOps {
 		return nil
 	}
 
-	if len(f.files) == 0 {
+	if len(f.filePaths) == 0 {
 		return &FilesOps{
 			e: errors.New("no file names to print"),
 		}
 	}
 
-	for _, info := range f.files {
-		w.Write([]byte(info.Name() + "\n"))
+	for _, file := range f.filePaths {
+		w.Write([]byte(file + "\n"))
 	}
 
 	return f

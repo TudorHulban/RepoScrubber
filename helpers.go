@@ -9,14 +9,14 @@ import (
 	"strings"
 )
 
-func pathExists(path string) error {
-	sourceFileStat, errPath := os.Stat(path)
+func pathExists(filePath string) error {
+	sourceFileStat, errPath := os.Stat(filePath)
 	if os.IsNotExist(errPath) {
 		return errPath
 	}
 
 	if !sourceFileStat.Mode().IsRegular() {
-		return fmt.Errorf("%s is not a regular file", path)
+		return fmt.Errorf("%s is not a regular file", filePath)
 	}
 
 	return nil
