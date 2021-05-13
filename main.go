@@ -1,14 +1,14 @@
 package main
 
 import (
-	"fmt"
+	"os"
 )
 
 func main() {
 	folderPath := "/home/tudi/ram/TestMock"
 
-	filter := FilterFiles{}
-	files := filter.ByFolder(folderPath).ByExtension("go").ByContent("package")
+	filter := FilesOps{}
+	// files := filter.ByFolder(folderPath).ByExtension("go").ByContent("package").Rename("bak")
 
-	fmt.Println(len(files.files), files.e)
+	filter.ByFolder(folderPath).PrintFileNames(os.Stdout)
 }

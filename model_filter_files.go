@@ -3,38 +3,39 @@ package main
 import (
 	"errors"
 	"fmt"
+	"io"
 	"io/fs"
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strings"
 )
 
-type FilterFiles struct {
+// FilesOps Methods are nulifying state on error.
+type FilesOps struct {
 	e     error // TODO: assess maybe better to go with slice
 	files []fs.FileInfo
 }
 
-func (f *FilterFiles) ByFolder(folder string) *FilterFiles {
+func (f *FilesOps) ByFolder(folder string) *FilesOps {
 	if f.e != nil {
 		return nil
 	}
 
 	res, errRead := ioutil.ReadDir(folder)
 
-	return &FilterFiles{
+	return &FilesOps{
 		e:     errRead,
 		files: res,
 	}
 }
 
-func (f *FilterFiles) ByExtension(extension string) *FilterFiles {
+func (f *FilesOps) ByExtension(extension string) *FilesOps {
 	if f.e != nil {
 		return nil
 	}
 
 	if len(f.files) == 0 {
-		return &FilterFiles{
+		return &FilesOps{
 			e: errors.New("no files to search by extension"),
 		}
 	}
@@ -52,19 +53,18 @@ func (f *FilterFiles) ByExtension(extension string) *FilterFiles {
 		}
 	}
 
-	return &FilterFiles{
-		e:     nil,
-		files: res,
-	}
+	f.files = res
+
+	return f
 }
 
-func (f *FilterFiles) ByContent(pattern string) *FilterFiles {
+func (f *FilesOps) ByContent(pattern string) *FilesOps {
 	if f.e != nil {
 		return nil
 	}
 
 	if len(f.files) == 0 {
-		return &FilterFiles{
+		return &FilesOps{
 			e: errors.New("no files to search by content"),
 		}
 	}
@@ -80,34 +80,51 @@ func (f *FilterFiles) ByContent(pattern string) *FilterFiles {
 		res = append(res, info)
 	}
 
-	return &FilterFiles{
-		e:     nil,
-		files: res,
-	}
+	f.files = res
+
+	return f
 }
 
-func pathExists(path string) error {
-	_, errPath := os.Stat(path)
-	if os.IsNotExist(errPath) {
-		return errPath
-	}
-
-	return nil
-}
-
-func fileContains(s, filePath string) error {
-	if errPath := pathExists(filePath); errPath != nil {
-		return errPath
-	}
-
-	content, errRead := ioutil.ReadFile(filePath)
-	if errRead != nil {
-		return errRead
-	}
-
-	if strings.Contains(string(content), s) {
+func (f *FilesOps) Rename(withExtension string) *FilesOps {
+	if f.e != nil {
 		return nil
 	}
 
-	return errors.New("file does not contain string")
+	if len(f.files) == 0 {
+		return &FilesOps{
+			e: errors.New("no files to move"),
+		}
+	}
+
+	if withExtension[:1] != "." {
+		withExtension = "." + withExtension
+	}
+
+	for _, info := range f.files {
+		if errMove := os.Rename(info.Name(), info.Name()+withExtension); errMove != nil {
+			return &FilesOps{
+				e: fmt.Errorf("error when renaming %s", info.Name()),
+			}
+		}
+	}
+
+	return f
+}
+
+func (f *FilesOps) PrintFileNames(w io.Writer) *FilesOps {
+	if f.e != nil {
+		return nil
+	}
+
+	if len(f.files) == 0 {
+		return &FilesOps{
+			e: errors.New("no files to print"),
+		}
+	}
+
+	for _, info := range f.files {
+		w.Write([]byte(info.Name() + "\n"))
+	}
+
+	return f
 }
