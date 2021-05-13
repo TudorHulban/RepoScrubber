@@ -11,9 +11,9 @@ import (
 	"strings"
 )
 
-// FilesOps Methods are nulifying state on error.
+// FilesOps Methods are nulifying state files on error.
 type FilesOps struct {
-	e         error // TODO: assess maybe better to go with slice
+	e         error // only one error for simplicity
 	filePaths []string
 }
 
@@ -51,6 +51,7 @@ func (f *FilesOps) WalkFolder(folder string) *FilesOps {
 	return f
 }
 
+// ByFolder Method populates state with file paths from provided folder. Does not descend - for that use walk method.
 func (f *FilesOps) ByFolder(folder string) *FilesOps {
 	if f.e != nil {
 		return nil
@@ -130,6 +131,7 @@ func (f *FilesOps) ByFileName(fileName string) *FilesOps {
 	return f
 }
 
+// ByContent Method would select the files containing passed pattern.
 func (f *FilesOps) ByContent(pattern string) *FilesOps {
 	if f.e != nil {
 		return nil
@@ -156,6 +158,7 @@ func (f *FilesOps) ByContent(pattern string) *FilesOps {
 	return f
 }
 
+// Rename Method would add passed extension to state files.
 func (f *FilesOps) Rename(withExtension string) *FilesOps {
 	if f.e != nil {
 		return nil
@@ -182,7 +185,7 @@ func (f *FilesOps) Rename(withExtension string) *FilesOps {
 	return f
 }
 
-// Copy Method should be used as a backup.
+// Copy Method should be used as a backup. Would add passed extension as extension to state files.
 func (f *FilesOps) Copy(withExtension string) *FilesOps {
 	if f.e != nil {
 		return nil
@@ -202,6 +205,29 @@ func (f *FilesOps) Copy(withExtension string) *FilesOps {
 		if _, errCopy := fileCopy(file, file+withExtension); errCopy != nil {
 			return &FilesOps{
 				e: fmt.Errorf("error when copying %s", file),
+			}
+		}
+	}
+
+	return f
+}
+
+// Delete Method should delete state files.
+func (f *FilesOps) Delete() *FilesOps {
+	if f.e != nil {
+		return nil
+	}
+
+	if len(f.filePaths) == 0 {
+		return &FilesOps{
+			e: errors.New("no files to delete"),
+		}
+	}
+
+	for _, file := range f.filePaths {
+		if errRemove := os.Remove(file); errRemove != nil {
+			return &FilesOps{
+				e: fmt.Errorf("error when deleting %s", file),
 			}
 		}
 	}
@@ -272,6 +298,7 @@ func (f *FilesOps) PrintFiles(w io.Writer) *FilesOps {
 	return f
 }
 
+// Replace Method would replace old string with new string searching in state files.
 func (f *FilesOps) Replace(old, new string) *FilesOps {
 	if f.e != nil {
 		return nil
