@@ -79,7 +79,6 @@ func (f *FilesOps) ByExtension(extension string) *FilesOps {
 
 	for _, info := range f.files {
 		if extension == filepath.Ext(info.Name()) {
-			fmt.Println(info.Name())
 			res = append(res, info)
 		}
 	}
@@ -107,7 +106,6 @@ func (f *FilesOps) ByContent(pattern string) *FilesOps {
 			continue
 		}
 
-		fmt.Println(info.Name())
 		res = append(res, info)
 	}
 
@@ -135,6 +133,33 @@ func (f *FilesOps) Rename(withExtension string) *FilesOps {
 		if errMove := os.Rename(info.Name(), info.Name()+withExtension); errMove != nil {
 			return &FilesOps{
 				e: fmt.Errorf("error when renaming %s", info.Name()),
+			}
+		}
+	}
+
+	return f
+}
+
+// Copy Method should be used as a backup.
+func (f *FilesOps) Copy(withExtension string) *FilesOps {
+	if f.e != nil {
+		return nil
+	}
+
+	if len(f.files) == 0 {
+		return &FilesOps{
+			e: errors.New("no files to copy"),
+		}
+	}
+
+	if withExtension[:1] != "." {
+		withExtension = "." + withExtension
+	}
+
+	for _, info := range f.files {
+		if _, errCopy := fileCopy(info.Name(), info.Name()+withExtension); errCopy != nil {
+			return &FilesOps{
+				e: fmt.Errorf("error when copying %s", info.Name()),
 			}
 		}
 	}
