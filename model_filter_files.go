@@ -11,8 +11,9 @@ import (
 
 // FilesOps Methods are nulifying state on error.
 type FilesOps struct {
-	e     error // TODO: assess maybe better to go with slice
-	files []fs.DirEntry
+	e         error // TODO: assess maybe better to go with slice
+	files     []fs.DirEntry
+	filePaths []string
 }
 
 func (f *FilesOps) WalkFolder(folder string) *FilesOps {
@@ -21,6 +22,7 @@ func (f *FilesOps) WalkFolder(folder string) *FilesOps {
 	}
 
 	var res []fs.DirEntry
+	var paths []string
 
 	walkFunction := func(path string, infoCurrent os.DirEntry, errCurrent error) error {
 		if errCurrent != nil {
@@ -32,6 +34,7 @@ func (f *FilesOps) WalkFolder(folder string) *FilesOps {
 		}
 
 		res = append(res, infoCurrent)
+		paths = append(paths, path)
 		return nil
 	}
 
@@ -43,6 +46,7 @@ func (f *FilesOps) WalkFolder(folder string) *FilesOps {
 	}
 
 	f.files = res
+	f.filePaths = paths
 
 	return f
 }
@@ -84,6 +88,16 @@ func (f *FilesOps) ByExtension(extension string) *FilesOps {
 	}
 
 	f.files = res
+
+	var paths []string
+
+	for _, path := range f.filePaths {
+		if extension == filepath.Ext(path) {
+			paths = append(paths, path)
+		}
+	}
+
+	f.filePaths = paths
 
 	return f
 }
@@ -167,19 +181,37 @@ func (f *FilesOps) Copy(withExtension string) *FilesOps {
 	return f
 }
 
-func (f *FilesOps) PrintFileNames(w io.Writer) *FilesOps {
+func (f *FilesOps) PrintFileName(w io.Writer) *FilesOps {
 	if f.e != nil {
 		return nil
 	}
 
 	if len(f.files) == 0 {
 		return &FilesOps{
-			e: errors.New("no files to print"),
+			e: errors.New("no file names to print"),
 		}
 	}
 
 	for _, info := range f.files {
 		w.Write([]byte(info.Name() + "\n"))
+	}
+
+	return f
+}
+
+func (f *FilesOps) PrintFilePath(w io.Writer) *FilesOps {
+	if f.e != nil {
+		return nil
+	}
+
+	if len(f.filePaths) == 0 {
+		return &FilesOps{
+			e: errors.New("no files paths to print"),
+		}
+	}
+
+	for _, info := range f.filePaths {
+		w.Write([]byte(info + "\n"))
 	}
 
 	return f

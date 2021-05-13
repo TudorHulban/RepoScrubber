@@ -12,5 +12,5 @@ func main() {
 
 	// filter.ByFolder(folderPath).PrintFileNames(os.Stdout)
 
-	filter.WalkFolder(folderPath).ByExtension("go").Copy("bak").PrintFileNames(os.Stdout)
+	filter.WalkFolder(folderPath).ByExtension("go").PrintFilePath(os.Stdout)
 }
