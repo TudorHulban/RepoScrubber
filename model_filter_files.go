@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 )
@@ -95,6 +96,30 @@ func (f *FilesOps) ByExtension(extension string) *FilesOps {
 
 	for _, path := range f.filePaths {
 		if extension == filepath.Ext(path) {
+			paths = append(paths, path)
+		}
+	}
+
+	f.filePaths = paths
+
+	return f
+}
+
+func (f *FilesOps) ByFileName(fileName string) *FilesOps {
+	if f.e != nil {
+		return nil
+	}
+
+	if len(f.filePaths) == 0 {
+		return &FilesOps{
+			e: errors.New("no files to search by file name"),
+		}
+	}
+
+	var paths []string
+
+	for _, path := range f.filePaths {
+		if fileName == filepath.Base(path) {
 			paths = append(paths, path)
 		}
 	}
@@ -214,6 +239,33 @@ func (f *FilesOps) PrintFilePath(w io.Writer) *FilesOps {
 
 	for _, info := range f.filePaths {
 		w.Write([]byte(info + "\n"))
+	}
+
+	return f
+}
+
+func (f *FilesOps) PrintFiles(w io.Writer) *FilesOps {
+	if f.e != nil {
+		return nil
+	}
+
+	if len(f.filePaths) == 0 {
+		return &FilesOps{
+			e: errors.New("no files to print"),
+		}
+	}
+
+	for _, file := range f.filePaths {
+		content, errRead := ioutil.ReadFile(file)
+		if errRead != nil {
+			return &FilesOps{
+				e: errRead,
+			}
+		}
+
+		w.Write(content)
+		w.Write([]byte("\n" + "end of file " + file))
+		w.Write([]byte("\n"))
 	}
 
 	return f
