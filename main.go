@@ -15,5 +15,5 @@ func main() {
 
 	// filter.ByFolder(folderPath).ByExtension("go").ByContent("package").Copy("bak").ByFolder(folderPath).PrintFiles(os.Stdout).ByFileName("main.go.bak").ByExtension("bak").PrintFiles(os.Stdout)
 
-	filter.ByFolder(folderPath).PrintFilePath(os.Stdout).ByExtension("bak").PrintFilePath(os.Stdout).ByFileName("main.go.bak").PrintFiles(os.Stdout)
+	filter.ByFolder(folderPath).ByExtension("bak").ByFileName("main.go.bak").Replace("package main", "package mainbak").PrintFiles(os.Stdout)
 }

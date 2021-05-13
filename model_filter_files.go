@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 // FilesOps Methods are nulifying state on error.
@@ -266,6 +267,38 @@ func (f *FilesOps) PrintFiles(w io.Writer) *FilesOps {
 		w.Write(content)
 		w.Write([]byte("\n" + "end of file " + file))
 		w.Write([]byte("\n"))
+	}
+
+	return f
+}
+
+func (f *FilesOps) Replace(old, new string) *FilesOps {
+	if f.e != nil {
+		return nil
+	}
+
+	if len(f.filePaths) == 0 {
+		return &FilesOps{
+			e: errors.New("no files to consider for replace"),
+		}
+	}
+
+	for _, file := range f.filePaths {
+		content, errRead := os.ReadFile(file)
+		if errRead != nil {
+			return &FilesOps{
+				e: errRead,
+			}
+		}
+
+		data := strings.ReplaceAll(string(content), old, new)
+
+		errWrite := ioutil.WriteFile(file, []byte(data), 0644)
+		if errWrite != nil {
+			return &FilesOps{
+				e: errWrite,
+			}
+		}
 	}
 
 	return f
