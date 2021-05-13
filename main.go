@@ -10,5 +10,7 @@ func main() {
 	filter := FilesOps{}
 	// files := filter.ByFolder(folderPath).ByExtension("go").ByContent("package").Rename("bak")
 
-	filter.ByFolder(folderPath).PrintFileNames(os.Stdout)
+	// filter.ByFolder(folderPath).PrintFileNames(os.Stdout)
+
+	filter.WalkFolder(folderPath).ByExtension("go").PrintFileNames(os.Stdout)
 }

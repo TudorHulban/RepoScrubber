@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 )
@@ -13,7 +12,39 @@ import (
 // FilesOps Methods are nulifying state on error.
 type FilesOps struct {
 	e     error // TODO: assess maybe better to go with slice
-	files []fs.FileInfo
+	files []fs.DirEntry
+}
+
+func (f *FilesOps) WalkFolder(folder string) *FilesOps {
+	if f.e != nil {
+		return nil
+	}
+
+	var res []fs.DirEntry
+
+	walkFunction := func(path string, infoCurrent os.DirEntry, errCurrent error) error {
+		if errCurrent != nil {
+			return errCurrent
+		}
+
+		if infoCurrent.IsDir() {
+			return nil
+		}
+
+		res = append(res, infoCurrent)
+		return nil
+	}
+
+	errWalk := filepath.WalkDir(folder, walkFunction)
+	if errWalk != nil {
+		return &FilesOps{
+			e: errWalk,
+		}
+	}
+
+	f.files = res
+
+	return f
 }
 
 func (f *FilesOps) ByFolder(folder string) *FilesOps {
@@ -21,7 +52,7 @@ func (f *FilesOps) ByFolder(folder string) *FilesOps {
 		return nil
 	}
 
-	res, errRead := ioutil.ReadDir(folder)
+	res, errRead := os.ReadDir(folder)
 
 	return &FilesOps{
 		e:     errRead,
@@ -44,7 +75,7 @@ func (f *FilesOps) ByExtension(extension string) *FilesOps {
 		extension = "." + extension
 	}
 
-	var res []fs.FileInfo
+	var res []fs.DirEntry
 
 	for _, info := range f.files {
 		if extension == filepath.Ext(info.Name()) {
@@ -69,7 +100,7 @@ func (f *FilesOps) ByContent(pattern string) *FilesOps {
 		}
 	}
 
-	var res []fs.FileInfo
+	var res []fs.DirEntry
 
 	for _, info := range f.files {
 		if errContains := fileContains(pattern, info.Name()); errContains != nil {
