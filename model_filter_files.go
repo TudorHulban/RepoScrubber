@@ -21,9 +21,11 @@ type MockInfo struct {
 
 // FilesOps Methods are nulifying state files on error.
 type FilesOps struct {
+	spooling  bool
 	e         error // only one error for simplicity
 	filePaths []string
 	content   []string
+	spool     []string
 }
 
 func (f *FilesOps) WalkFolder(folder string) *FilesOps {
@@ -187,6 +189,35 @@ func (f *FilesOps) Rename(withExtension string) *FilesOps {
 		if errMove := os.Rename(file, file+withExtension); errMove != nil {
 			return &FilesOps{
 				e: fmt.Errorf("error when renaming %s", file),
+			}
+		}
+	}
+
+	return f
+}
+
+// Revert Method would delete passed extension from state files.
+func (f *FilesOps) Revert(theExtension string) *FilesOps {
+	if f.e != nil {
+		return nil
+	}
+
+	if len(f.filePaths) == 0 {
+		return &FilesOps{
+			e: errors.New("no files to revert"),
+		}
+	}
+
+	if theExtension[:1] != "." {
+		theExtension = "." + theExtension
+	}
+
+	for _, file := range f.filePaths {
+		ix := strings.LastIndex(file, theExtension)
+
+		if errMove := os.Rename(file, file[:ix]); errMove != nil {
+			return &FilesOps{
+				e: fmt.Errorf("error when reverting %s", file),
 			}
 		}
 	}
@@ -424,6 +455,26 @@ func (f *FilesOps) PrintContent(w io.Writer) *FilesOps {
 	}
 
 	w.Write([]byte("\n"))
+
+	return f
+}
+
+func (f *FilesOps) SpoolOn() *FilesOps {
+	if f.e != nil {
+		return nil
+	}
+
+	f.spooling = true
+
+	return f
+}
+
+func (f *FilesOps) SpoolOff() *FilesOps {
+	if f.e != nil {
+		return nil
+	}
+
+	f.spooling = false
 
 	return f
 }
