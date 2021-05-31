@@ -28,7 +28,7 @@ type FilesOps struct {
 	spool     []string
 }
 
-func (f *FilesOps) WalkFolder(folder string) *FilesOps {
+func (f *FilesOps) SearchWalkFolder(folder string) *FilesOps {
 	if f.e != nil {
 		return nil
 	}
@@ -63,7 +63,7 @@ func (f *FilesOps) WalkFolder(folder string) *FilesOps {
 }
 
 // ByFolder Method populates state with file paths from provided folder. Does not descend - for that use walk method.
-func (f *FilesOps) ByFolder(folder string) *FilesOps {
+func (f *FilesOps) SearchByFolder(folder string) *FilesOps {
 	if f.e != nil {
 		return nil
 	}
@@ -90,7 +90,7 @@ func (f *FilesOps) ByFolder(folder string) *FilesOps {
 	}
 }
 
-func (f *FilesOps) ByExtension(extension string) *FilesOps {
+func (f *FilesOps) FilterByExtension(extension string) *FilesOps {
 	if f.e != nil {
 		return nil
 	}
@@ -118,7 +118,7 @@ func (f *FilesOps) ByExtension(extension string) *FilesOps {
 	return f
 }
 
-func (f *FilesOps) ByFileName(fileName string) *FilesOps {
+func (f *FilesOps) FilterByFileName(fileName string) *FilesOps {
 	if f.e != nil {
 		return nil
 	}
@@ -143,7 +143,7 @@ func (f *FilesOps) ByFileName(fileName string) *FilesOps {
 }
 
 // ByContent Method would select the files containing passed pattern.
-func (f *FilesOps) ByContent(pattern string) *FilesOps {
+func (f *FilesOps) FilterByContent(pattern string) *FilesOps {
 	if f.e != nil {
 		return nil
 	}
@@ -170,7 +170,7 @@ func (f *FilesOps) ByContent(pattern string) *FilesOps {
 }
 
 // Rename Method would add passed extension to state files.
-func (f *FilesOps) Rename(withExtension string) *FilesOps {
+func (f *FilesOps) FilesRename(withExtension string) *FilesOps {
 	if f.e != nil {
 		return nil
 	}
@@ -197,7 +197,7 @@ func (f *FilesOps) Rename(withExtension string) *FilesOps {
 }
 
 // Revert Method would delete passed extension from state files.
-func (f *FilesOps) Revert(theExtension string) *FilesOps {
+func (f *FilesOps) FilesRevert(extension string) *FilesOps {
 	if f.e != nil {
 		return nil
 	}
@@ -208,12 +208,12 @@ func (f *FilesOps) Revert(theExtension string) *FilesOps {
 		}
 	}
 
-	if theExtension[:1] != "." {
-		theExtension = "." + theExtension
+	if extension[:1] != "." {
+		extension = "." + extension
 	}
 
 	for _, file := range f.filePaths {
-		ix := strings.LastIndex(file, theExtension)
+		ix := strings.LastIndex(file, extension)
 
 		if errMove := os.Rename(file, file[:ix]); errMove != nil {
 			return &FilesOps{
@@ -226,7 +226,7 @@ func (f *FilesOps) Revert(theExtension string) *FilesOps {
 }
 
 // Copy Method should be used as a backup. Would add passed extension as extension to state files.
-func (f *FilesOps) Copy(withExtension string) *FilesOps {
+func (f *FilesOps) FilesCopyToExtension(extension string) *FilesOps {
 	if f.e != nil {
 		return nil
 	}
@@ -237,12 +237,12 @@ func (f *FilesOps) Copy(withExtension string) *FilesOps {
 		}
 	}
 
-	if withExtension[:1] != "." {
-		withExtension = "." + withExtension
+	if extension[:1] != "." {
+		extension = "." + extension
 	}
 
 	for _, file := range f.filePaths {
-		if _, errCopy := fileCopy(file, file+withExtension); errCopy != nil {
+		if _, errCopy := fileCopy(file, file+extension); errCopy != nil {
 			return &FilesOps{
 				e: fmt.Errorf("error when copying %s", file),
 			}
@@ -253,7 +253,7 @@ func (f *FilesOps) Copy(withExtension string) *FilesOps {
 }
 
 // Delete Method should delete state files.
-func (f *FilesOps) Delete() *FilesOps {
+func (f *FilesOps) FilesDelete() *FilesOps {
 	if f.e != nil {
 		return nil
 	}
@@ -339,7 +339,7 @@ func (f *FilesOps) PrintFiles(w io.Writer) *FilesOps {
 }
 
 // Replace Method would replace old string with new string searching in state files.
-func (f *FilesOps) Replace(old, new string) *FilesOps {
+func (f *FilesOps) ContentReplace(old, new string) *FilesOps {
 	if f.e != nil {
 		return nil
 	}
@@ -372,7 +372,7 @@ func (f *FilesOps) Replace(old, new string) *FilesOps {
 }
 
 // Append Method would append text to state files.
-func (f *FilesOps) Append(text string) *FilesOps {
+func (f *FilesOps) ContentAppend(text string) *FilesOps {
 	if f.e != nil {
 		return nil
 	}
@@ -405,7 +405,7 @@ func (f *FilesOps) Append(text string) *FilesOps {
 }
 
 // SelectBy Method would append to state content rows containing passed pattern.
-func (f *FilesOps) SelectBy(pattern string) *FilesOps {
+func (f *FilesOps) ContentExtractByPattern(pattern string) *FilesOps {
 	if f.e != nil {
 		return nil
 	}

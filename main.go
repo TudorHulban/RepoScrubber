@@ -17,5 +17,5 @@ func main() {
 
 	// filter.ByFolder(folderPath).ByFileName("main.go").Rename("bak").PrintFilePath(os.Stdout)
 
-	filter.ByFolder(folderPath).ByExtension("bak").PrintFilePath(os.Stdout).Revert("bak")
+	filter.SearchByFolder(folderPath).FilterByExtension("bak").PrintFilePath(os.Stdout).FilesRevert("bak")
 }
