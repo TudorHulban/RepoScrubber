@@ -123,6 +123,7 @@ func (f *FilesOps) FilterByExtension(extension string) *FilesOps {
 }
 
 // FilterByFileName Method does not reset content.
+// TODO: multiple file names
 func (f *FilesOps) FilterByFileName(fileName string) *FilesOps {
 	if f.e != nil {
 		return nil
@@ -189,7 +190,7 @@ func (f *FilesOps) ContentExtractByPattern(pattern string) *FilesOps {
 }
 
 // ContentAppendMockTargetsMakefile Method would append to Makefile target to re-create mock files.
-func (f *FilesOps) ContentAppendMockTargetsMakefile() *FilesOps {
+func (f *FilesOps) ContentAppendMockTargetsMakefile(rootFolder string) *FilesOps {
 	if f.e != nil {
 		return nil
 	}
@@ -207,12 +208,16 @@ func (f *FilesOps) ContentAppendMockTargetsMakefile() *FilesOps {
 
 	for i := 0; i < len(f.filePaths); i++ {
 		content := strings.Split(f.content[i], " ")
-		e := createMockTargetEntry(f.filePaths[i], mockgenPackageName, content[2], content[4][:len(content[4])-2])
+
+		e := createMockTargetEntry(f.filePaths[i], mockgenPackageName, content[2], content[4][:len(content[4])-1])
 		makefileTarget = append(makefileTarget, e)
 	}
 
-	f.SearchByFolder(f.filePaths[0][:strings.LastIndex(f.filePaths[0], "/")-1])
-	f.FilterByFileName(makefileName).ContentAppend(strings.Join(makefileTarget, "\n"))
+	// fmt.Println(makefileTarget)
+
+	f.FilesCreate([]string{rootFolder + "/" + makefileName}...)
+	f.SearchByFolder(rootFolder).FilterByFileName(makefileName).PrintFileNames(os.Stdout)
+	f.ContentAppend(strings.Join(makefileTarget, "\n"))
 
 	return f
 }
@@ -331,7 +336,8 @@ func (f *FilesOps) FilesCopyToExtension(extension string) *FilesOps {
 	return f
 }
 
-// Delete Method should delete state files.
+// Delete Method should delete files in state or files passed.
+// TODO: add deletion of passed files.
 func (f *FilesOps) FilesDelete() *FilesOps {
 	if f.e != nil {
 		return nil
@@ -354,7 +360,34 @@ func (f *FilesOps) FilesDelete() *FilesOps {
 	return f
 }
 
-func (f *FilesOps) PrintFileName(w io.Writer) *FilesOps {
+// FilesCreate Method should create passed file paths.
+func (f *FilesOps) FilesCreate(filePaths ...string) *FilesOps {
+	if f.e != nil {
+		return nil
+	}
+
+	if len(filePaths) == 0 {
+		return &FilesOps{
+			e: errors.New("no files to create"),
+		}
+	}
+
+	for _, path := range filePaths {
+		file, errCreate := os.Create(path)
+		if errCreate != nil {
+			return &FilesOps{
+				e: errCreate,
+			}
+		}
+
+		file.Close()
+	}
+
+	return f
+}
+
+// PrintFileNames Method prints files state.
+func (f *FilesOps) PrintFileNames(w io.Writer) *FilesOps {
 	if f.e != nil {
 		return nil
 	}
@@ -390,14 +423,20 @@ func (f *FilesOps) PrintFilePath(w io.Writer) *FilesOps {
 	return f
 }
 
-func (f *FilesOps) PrintFiles(w io.Writer) *FilesOps {
+// PrintFiles Method prints state files to passed writer or the error.
+func (f *FilesOps) PrintFilesContent(w io.Writer) *FilesOps {
 	if f.e != nil {
+		w.Write([]byte(f.e.Error()))
 		return nil
 	}
 
 	if len(f.filePaths) == 0 {
+		err := errors.New("no files to print its content\n")
+
+		w.Write([]byte(err.Error()))
+
 		return &FilesOps{
-			e: errors.New("no files to print"),
+			e: err,
 		}
 	}
 
