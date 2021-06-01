@@ -123,10 +123,15 @@ func (f *FilesOps) FilterByExtension(extension string) *FilesOps {
 }
 
 // FilterByFileName Method does not reset content.
-// TODO: multiple file names
-func (f *FilesOps) FilterByFileName(fileName string) *FilesOps {
+func (f *FilesOps) FilterByFileName(filePaths ...string) *FilesOps {
 	if f.e != nil {
 		return nil
+	}
+
+	if len(filePaths) == 0 {
+		return &FilesOps{
+			e: errors.New("no passed file names to search"),
+		}
 	}
 
 	if len(f.filePaths) == 0 {
@@ -138,8 +143,11 @@ func (f *FilesOps) FilterByFileName(fileName string) *FilesOps {
 	var paths []string
 
 	for _, path := range f.filePaths {
-		if fileName == filepath.Base(path) {
-			paths = append(paths, path)
+		for _, fileName := range filePaths {
+			//check works for absolute path also
+			if fileName == path || fileName == filepath.Base(path) {
+				paths = append(paths, path)
+			}
 		}
 	}
 
@@ -361,6 +369,7 @@ func (f *FilesOps) FilesDelete() *FilesOps {
 }
 
 // FilesCreate Method should create passed file paths.
+// Does not change state.
 func (f *FilesOps) FilesCreate(filePaths ...string) *FilesOps {
 	if f.e != nil {
 		return nil

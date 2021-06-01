@@ -1,12 +1,12 @@
 package main
 
 import (
-	// "fmt"
+	"fmt"
 	"os"
 )
 
 func main() {
-	folderPath := "/home/tudi/ram/TestMock"
+	folderPath := "/home/tudi/ram/test"
 
 	filter := FilesOps{}
 
@@ -18,8 +18,8 @@ func main() {
 
 	makefile := []string{folderPath + "/" + makefileName}
 
-	// fmt.Println(makefile)
+	fmt.Println("mk:", makefile)
 
-	filter.SearchWalkFolder(folderPath).FilterByFileName(makefile[0]).PrintFileNames(os.Stdout)
+	filter.SearchWalkFolder(folderPath).FilesCreate(makefile...).FilterByFileName(makefile...).PrintFileNames(os.Stdout)
 	//
 }
