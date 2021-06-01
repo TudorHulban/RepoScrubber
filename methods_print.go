@@ -7,6 +7,7 @@ import (
 )
 
 // PrintContent Method prints the state content.
+// TODO: if writer passed overwite state writer
 func (f *FilesOps) PrintContent(w io.Writer) *FilesOps {
 	if f.e != nil {
 		return nil

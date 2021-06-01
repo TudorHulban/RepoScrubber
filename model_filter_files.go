@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -18,11 +19,16 @@ type MockInfo struct {
 
 // FilesOps Methods are nulifying state files on error.
 type FilesOps struct {
-	spooling  bool
-	e         error // only one error for simplicity
+	writer io.Writer // assess if more than one needed
+	e      error     // only one error for simplicity
+
 	filePaths []string
 	content   []string // contains extracted rows
-	spool     []string
+
+	spool    []string
+	spooling bool
+
+	rootFolder string // used in Makefile generation
 }
 
 const mockgenBinaryPath = "mockgen"

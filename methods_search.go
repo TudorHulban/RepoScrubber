@@ -19,19 +19,19 @@ func (f *FilesOps) SearchByFolder(folder string) *FilesOps {
 		}
 	}
 
-	var res []string
+	var paths []string
 
 	if folder[len(folder)-1:] != "/" {
 		folder = folder + "/"
 	}
 
 	for _, file := range files {
-		res = append(res, folder+file.Name())
+		paths = append(paths, folder+file.Name())
 	}
 
-	return &FilesOps{
-		filePaths: res,
-	}
+	f.filePaths = paths
+
+	return f
 }
 
 func (f *FilesOps) SearchWalkFolder(folder string) *FilesOps {
