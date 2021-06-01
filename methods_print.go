@@ -4,13 +4,26 @@ import (
 	"errors"
 	"io"
 	"io/ioutil"
+	"path/filepath"
 )
 
 // PrintContent Method prints the state content.
-// TODO: if writer passed overwite state writer
-func (f *FilesOps) PrintContent(w io.Writer) *FilesOps {
+func (f *FilesOps) PrintContent(w ...io.Writer) *FilesOps {
 	if f.e != nil {
 		return nil
+	}
+
+	// TODO: code repeat. to refactor.
+	if len(w) == 0 {
+		if len(f.writers) == 0 {
+			return &FilesOps{
+				e: errors.New("no writers passed and no previous defined writers to write"),
+			}
+		}
+
+		w = f.writers
+	} else {
+		f.writers = w
 	}
 
 	if len(f.content) == 0 {
@@ -20,18 +33,37 @@ func (f *FilesOps) PrintContent(w io.Writer) *FilesOps {
 	}
 
 	for _, content := range f.content {
-		w.Write([]byte("\n" + content))
+		for _, writer := range w {
+			writer.Write([]byte("\n" + content))
+		}
+
 	}
 
-	w.Write([]byte("\n"))
+	for _, writer := range w {
+		writer.Write([]byte("\n"))
+	}
+
+	f.writers = w
 
 	return f
 }
 
-// PrintFileNames Method prints files state.
-func (f *FilesOps) PrintFileNames(w io.Writer) *FilesOps {
+// PrintFilePath Method prints full path for files in state.
+func (f *FilesOps) PrintFilePath(w ...io.Writer) *FilesOps {
 	if f.e != nil {
 		return nil
+	}
+
+	if len(w) == 0 {
+		if len(f.writers) == 0 {
+			return &FilesOps{
+				e: errors.New("no writers passed and no previous defined writers to write"),
+			}
+		}
+
+		w = f.writers
+	} else {
+		f.writers = w
 	}
 
 	if len(f.filePaths) == 0 {
@@ -41,44 +73,72 @@ func (f *FilesOps) PrintFileNames(w io.Writer) *FilesOps {
 	}
 
 	for _, file := range f.filePaths {
-		w.Write([]byte(file + "\n"))
+		for _, writer := range w {
+			writer.Write([]byte(file + "\n"))
+		}
 	}
 
 	return f
 }
 
-func (f *FilesOps) PrintFilePath(w io.Writer) *FilesOps {
+// PrintFileNames Method prints name only for files in state.
+func (f *FilesOps) PrintFileNames(w ...io.Writer) *FilesOps {
 	if f.e != nil {
 		return nil
 	}
 
+	if len(w) == 0 {
+		if len(f.writers) == 0 {
+			return &FilesOps{
+				e: errors.New("no writers passed and no previous defined writers to write"),
+			}
+		}
+
+		w = f.writers
+	} else {
+		f.writers = w
+	}
+
 	if len(f.filePaths) == 0 {
 		return &FilesOps{
-			e: errors.New("no files paths to print"),
+			e: errors.New("no files names to print"),
 		}
 	}
 
-	for _, info := range f.filePaths {
-		w.Write([]byte(info + "\n"))
+	for _, path := range f.filePaths {
+		for _, writer := range w {
+			writer.Write([]byte(filepath.Base(path) + "\n"))
+		}
 	}
 
 	return f
 }
 
 // PrintFiles Method prints state files to passed writer or the error.
-func (f *FilesOps) PrintFilesContent(w io.Writer) *FilesOps {
+func (f *FilesOps) PrintFilesContent(w ...io.Writer) *FilesOps {
+	if len(w) == 0 {
+		if len(f.writers) == 0 {
+			return &FilesOps{
+				e: errors.New("no writers passed and no previous defined writers to write"),
+			}
+		}
+
+		w = f.writers
+	} else {
+		f.writers = w
+	}
+
 	if f.e != nil {
-		w.Write([]byte(f.e.Error()))
+		for _, writer := range w {
+			writer.Write([]byte(f.e.Error()))
+		}
+
 		return nil
 	}
 
 	if len(f.filePaths) == 0 {
-		err := errors.New("no files to print its content\n")
-
-		w.Write([]byte(err.Error()))
-
 		return &FilesOps{
-			e: err,
+			e: errors.New("no files to print its content\n"),
 		}
 	}
 
@@ -90,9 +150,11 @@ func (f *FilesOps) PrintFilesContent(w io.Writer) *FilesOps {
 			}
 		}
 
-		w.Write(content)
-		w.Write([]byte("\n" + "end of file " + file))
-		w.Write([]byte("\n"))
+		for _, writer := range w {
+			writer.Write(content)
+			writer.Write([]byte("\n" + "end of file " + file))
+			writer.Write([]byte("\n"))
+		}
 	}
 
 	return f

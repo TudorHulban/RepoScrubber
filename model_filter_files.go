@@ -19,8 +19,8 @@ type MockInfo struct {
 
 // FilesOps Methods are nulifying state files on error.
 type FilesOps struct {
-	writer io.Writer // assess if more than one needed
-	e      error     // only one error for simplicity
+	writers []io.Writer // assess if more than one needed
+	e       error       // only one error for simplicity
 
 	filePaths []string
 	content   []string // contains extracted rows
