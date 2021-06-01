@@ -26,6 +26,10 @@ func (f *FilesOps) SearchByFolder(folder string) *FilesOps {
 	}
 
 	for _, file := range files {
+		if file.IsDir() {
+			continue
+		}
+
 		paths = append(paths, folder+file.Name())
 	}
 
@@ -54,6 +58,10 @@ func (f *FilesOps) SearchWalkFolder(folder string) *FilesOps {
 		res = append(res, infoCurrent)
 		paths = append(paths, path)
 		return nil
+	}
+
+	if folder[len(folder)-1:] != "/" {
+		folder = folder + "/"
 	}
 
 	errWalk := filepath.WalkDir(folder, walkFunction)
