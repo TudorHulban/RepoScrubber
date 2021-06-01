@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	folderPath := "/home/tudi/ram/test"
+	folderPath := "/home/tudi/ram/TestMock/"
 
 	filter := FilesOps{}
 
@@ -20,6 +20,10 @@ func main() {
 
 	fmt.Println("mk:", makefile)
 
-	filter.SearchWalkFolder(folderPath).FilesCreate(makefile...).FilterByFileName(makefile...).PrintFileNames(os.Stdout)
-	//
+	// filter.SearchWalkFolder(folderPath).FilesCreate(makefile...).FilterByFileName(makefile...).PrintFileNames(os.Stdout).ContentAppend("xxx").PrintFilesContent(os.Stdout)
+
+	filter.SearchWalkFolder(folderPath).
+		FilesCreate(makefile...).
+		ContentAppendMockTargetsMakefile(folderPath).
+		PrintContent(os.Stdout)
 }
