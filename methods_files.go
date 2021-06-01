@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"strings"
 )
@@ -135,6 +136,72 @@ func (f *FilesOps) FilesRevert(extension string) *FilesOps {
 		if errMove := os.Rename(file, file[:ix]); errMove != nil {
 			return &FilesOps{
 				e: fmt.Errorf("error when reverting %s", file),
+			}
+		}
+	}
+
+	return f
+}
+
+// FileAppend Method would append text to state files.
+func (f *FilesOps) FilesAppend(text string) *FilesOps {
+	if f.e != nil {
+		return nil
+	}
+
+	if len(f.filePaths) == 0 {
+		return &FilesOps{
+			e: errors.New("no files to consider for append"),
+		}
+	}
+
+	for _, file := range f.filePaths {
+		existingContent, errRead := os.ReadFile(file)
+		if errRead != nil {
+			return &FilesOps{
+				e: errRead,
+			}
+		}
+
+		newContent := string(existingContent) + "\n" + text
+
+		errWrite := ioutil.WriteFile(file, []byte(newContent), 0644)
+		if errWrite != nil {
+			return &FilesOps{
+				e: errWrite,
+			}
+		}
+	}
+
+	return f
+}
+
+// Replace Method would replace old string with new string searching in state files.
+func (f *FilesOps) ContentReplace(old, new string) *FilesOps {
+	if f.e != nil {
+		return nil
+	}
+
+	if len(f.filePaths) == 0 {
+		return &FilesOps{
+			e: errors.New("no files to consider for replace"),
+		}
+	}
+
+	for _, file := range f.filePaths {
+		content, errRead := os.ReadFile(file)
+		if errRead != nil {
+			return &FilesOps{
+				e: errRead,
+			}
+		}
+
+		data := strings.ReplaceAll(string(content), old, new)
+
+		errWrite := ioutil.WriteFile(file, []byte(data), 0644)
+		if errWrite != nil {
+			return &FilesOps{
+				e: errWrite,
 			}
 		}
 	}

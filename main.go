@@ -38,6 +38,15 @@ func main() {
 	o := FilesOps{}
 	// o.FilesCreate("/home/tudi/ram/created_file1.txt", "/home/tudi/ram/created_file2.txt")
 
-	o.SearchByFolder("/home/tudi/ram").PrintContent([]io.Writer{os.Stdout}...)
+	o.SearchByFolder("/home/tudi/ram").
+		FilesCreate("/home/tudi/ram/created_file1.txt", "/home/tudi/ram/created_file2.txt").
+		PrintFileNames([]io.Writer{os.Stdout}...).
+		FilesAppend("y").
+		ContentAdd("Content:").
+		ContentAddByPattern("y").
+		PrintContent().
+		PrintFilesContent().
+		ContentReplace("y", "x").
+		PrintFilesContent()
 
 }

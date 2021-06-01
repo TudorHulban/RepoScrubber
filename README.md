@@ -117,3 +117,24 @@ Prints extracted from files information.
 ```go
 o.SearchByFolder("/home/tudi/ram").PrintContent([]io.Writer{os.Stdout}...)
 ```
+
+## Content Management
+### Append content to previously selected files
+```go
+o.SearchByFolder("/home/tudi/ram").
+		PrintFileNames([]io.Writer{os.Stdout}...).
+		FileAppend("y").
+		ContentAdd("Content:").
+		ContentExtractByPattern("y").
+		PrintContent()
+```
+### Extract file lines containing specified content
+```go
+o.SearchByFolder("/home/tudi/ram").
+		FilesCreate("/home/tudi/ram/created_file1.txt", "/home/tudi/ram/created_file2.txt").
+		PrintFileNames([]io.Writer{os.Stdout}...).
+		FilesAppend("y").
+		ContentAdd("Content:").
+		ContentAddByPattern("y").
+		PrintContent()
+``` 
