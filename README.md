@@ -125,7 +125,7 @@ o.SearchByFolder("/home/tudi/ram").
 		PrintFileNames([]io.Writer{os.Stdout}...).
 		FileAppend("y").
 		ContentAdd("Content:").
-		ContentExtractByPattern("y").
+		ContentAddByPattern("y").
 		PrintContent()
 ```
 ### Extract file lines containing specified content
