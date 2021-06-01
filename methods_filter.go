@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"path/filepath"
 )
 
@@ -80,8 +79,6 @@ func (f *FilesOps) FilterByFileName(filePaths ...string) *FilesOps {
 	}
 
 	var paths []string
-
-	fmt.Println("filtering by:", filePaths)
 
 	for _, path := range f.filePaths {
 		for _, fileName := range filePaths {

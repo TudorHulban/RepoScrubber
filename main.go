@@ -36,5 +36,9 @@ func main() {
 
 	o := FilesOps{}
 	// o.FilesCreate("/home/tudi/ram/created_file1.txt", "/home/tudi/ram/created_file2.txt")
-
+	o.SearchByFolder("/home/tudi/ram").
+		PrintFileNames(os.Stdout).
+		FilterByExtension("bak").
+		FilesDelete().
+		PrintFileNames(os.Stdout)
 }

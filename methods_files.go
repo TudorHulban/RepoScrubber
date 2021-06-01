@@ -34,8 +34,7 @@ func (f *FilesOps) FilesCopyToExtension(extension string) *FilesOps {
 	return f
 }
 
-// Delete Method should delete files in state or files passed.
-// TODO: add deletion of passed files.
+// Delete Method should delete files in state.
 func (f *FilesOps) FilesDelete() *FilesOps {
 	if f.e != nil {
 		return nil
@@ -54,6 +53,8 @@ func (f *FilesOps) FilesDelete() *FilesOps {
 			}
 		}
 	}
+
+	f.filePaths = []string{} // reset state after we deleted the files
 
 	return f
 }
